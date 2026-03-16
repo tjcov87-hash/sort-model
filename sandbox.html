@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sort Depth — Model Sandbox</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #E31837;
+    --navy: #0d1b2a;
+    --navy-mid: #132234;
+    --navy-card: #1a2e45;
+    --navy-input: #0f2035;
+    --white: #ffffff;
+    --gray: rgba(255,255,255,0.5);
+    --gray-dim: rgba(255,255,255,0.15);
+    --border: rgba(255,255,255,0.07);
+    --green: #22c55e;
+    --green-dim: rgba(34,197,94,0.1);
+    --green-border: rgba(34,197,94,0.25);
+    --orange: #fb923c;
+    --orange-dim: rgba(251,146,60,0.1);
+    --orange-border: rgba(251,146,60,0.25);
+    --red-dim: rgba(227,24,55,0.1);
+    --red-border: rgba(227,24,55,0.25);
+    --blue: #60a5fa;
+    --blue-dim: rgba(96,165,250,0.1);
+    --blue-border: rgba(96,165,250,0.25);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    font-size: 13px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--navy-mid);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .logo-dot { width: 26px; height: 26px; background: var(--red); border-radius: 50%; flex-shrink: 0; }
+  .logo-text { font-weight: 700; font-size: 14px; }
+  .logo-sub { font-size: 11px; color: var(--gray); margin-left: 2px; }
+  .header-tag {
+    margin-left: auto;
+    background: var(--red-dim); border: 1px solid var(--red-border);
+    color: #ff6b85; font-size: 10px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 100px;
+  }
+
+  /* ── SHARED INPUTS BAR ── */
+  .shared-bar {
+    background: var(--navy-mid);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  }
+  .shared-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--gray);
+    margin-right: 8px; white-space: nowrap;
+  }
+  .shared-input-group {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--navy-input); border: 1px solid var(--border);
+    border-radius: 10px; padding: 8px 14px;
+  }
+  .shared-input-group label { font-size: 11px; color: var(--gray); white-space: nowrap; }
+  .shared-input-group input[type=range] {
+    width: 90px; height: 4px; appearance: none;
+    background: rgba(255,255,255,0.12); border-radius: 100px; outline: none; cursor: pointer;
+  }
+  .shared-input-group input[type=range]::-webkit-slider-thumb {
+    appearance: none; width: 14px; height: 14px;
+    border-radius: 50%; background: var(--red);
+    border: 2px solid white; cursor: pointer;
+  }
+  .shared-val {
+    font-size: 12px; font-weight: 700; color: white;
+    background: var(--red); padding: 2px 8px;
+    border-radius: 100px; min-width: 36px; text-align: center;
+  }
+  .shared-bar .divider-v {
+    width: 1px; height: 28px; background: var(--border); margin: 0 4px;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 64px 1fr;
+    gap: 0;
+    padding: 20px 20px 0;
+    min-height: calc(100vh - 200px);
+  }
+
+  /* ── PANEL ── */
+  .panel {
+    background: var(--navy-mid);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .panel-title {
+    font-size: 10px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 2px;
+  }
+  .panel-title.left { color: #f87171; }
+  .panel-title.right { color: #4ade80; }
+  .panel-desc { font-size: 12px; color: var(--gray); line-height: 1.6; }
+
+  /* ── CONNECTOR ── */
+  .connector {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 8px; padding: 0 4px;
+  }
+  .connector-line {
+    width: 2px; flex: 1;
+    background: linear-gradient(180deg, transparent, rgba(227,24,55,0.4), transparent);
+  }
+  .connector-pill {
+    background: var(--red-dim);
+    border: 1px solid var(--red-border);
+    border-radius: 100px; padding: 6px 10px;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-size: 10px; font-weight: 700;
+    color: #ff6b85; letter-spacing: 1px;
+    text-transform: uppercase; white-space: nowrap;
+  }
+  .connector-arrow {
+    color: var(--red); font-size: 16px; line-height: 1;
+  }
+  .connector-value {
+    background: var(--red);
+    border-radius: 8px; padding: 8px 10px;
+    text-align: center; font-size: 11px; font-weight: 700;
+    writing-mode: vertical-rl; white-space: nowrap;
+    min-height: 80px; display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ── SLIDER GROUP ── */
+  .sg { display: flex; flex-direction: column; gap: 7px; }
+  .sg-top {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .sg-label { font-size: 12px; font-weight: 600; }
+  .sg-val {
+    background: var(--red); color: white;
+    font-size: 11px; font-weight: 700;
+    padding: 2px 9px; border-radius: 100px;
+    min-width: 54px; text-align: center;
+  }
+  input[type=range] {
+    width: 100%; height: 5px; appearance: none;
+    background: rgba(255,255,255,0.1); border-radius: 100px;
+    outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    appearance: none; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--red);
+    border: 2px solid white; cursor: pointer;
+    box-shadow: 0 1px 6px rgba(227,24,55,0.4);
+  }
+  .sg-hint { font-size: 11px; color: rgba(255,255,255,0.3); }
+
+  /* ── SECTION DIVIDER ── */
+  .sec-div {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: rgba(255,255,255,0.25);
+  }
+  .sec-div::before, .sec-div::after {
+    content:''; flex:1; height:1px; background:var(--border);
+  }
+
+  /* ── RESULT GRID ── */
+  .rg { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .rc {
+    background: var(--navy-input);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  .rc.green  { background: var(--green-dim);  border-color: var(--green-border); }
+  .rc.orange { background: var(--orange-dim); border-color: var(--orange-border); }
+  .rc.red    { background: var(--red-dim);    border-color: var(--red-border); }
+  .rc.blue   { background: var(--blue-dim);   border-color: var(--blue-border); }
+  .rc-lbl { font-size: 10px; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .rc-val { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.1; }
+  .rc.green  .rc-val { color: var(--green); }
+  .rc.orange .rc-val { color: var(--orange); }
+  .rc.red    .rc-val { color: #f87171; }
+  .rc.blue   .rc-val { color: var(--blue); }
+  .rc-sub { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 3px; }
+
+  /* ── TARGET BOX ── */
+  .target-box {
+    border-radius: 12px; padding: 14px 18px;
+    display: flex; align-items: center; gap: 14px;
+    transition: all 0.3s;
+  }
+  .target-big { font-size: 28px; font-weight: 900; line-height: 1; flex-shrink: 0; }
+  .target-lbl { font-size: 11px; font-weight: 700; margin-bottom: 3px; }
+  .target-status { font-size: 11px; }
+
+  /* ── LINKED BADGE ── */
+  .linked-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--red-dim); border: 1px solid var(--red-border);
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 12px;
+  }
+  .linked-badge .lbv {
+    font-size: 18px; font-weight: 800; color: #ff6b85;
+    letter-spacing: -0.5px;
+  }
+  .linked-badge .lbl-text { color: var(--gray); font-size: 11px; }
+  .link-arrow { color: var(--red); font-size: 14px; margin: 0 2px; }
+
+  /* ── BLENDED RATE BADGE ── */
+  .blended-rate-badge {
+    background: var(--blue-dim); border: 1px solid var(--blue-border);
+    border-radius: 10px; padding: 12px 16px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .blended-rate-badge.future {
+    background: var(--green-dim); border-color: var(--green-border);
+  }
+  .br-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+    text-transform: uppercase; color: var(--gray);
+  }
+  .br-formula {
+    font-size: 11px; color: rgba(255,255,255,0.5); font-family: monospace;
+  }
+  .br-val {
+    font-size: 22px; font-weight: 800; color: var(--blue); letter-spacing: -0.5px;
+  }
+  .blended-rate-badge.future .br-val { color: var(--green); }
+
+  /* ── DISTANCE TABLE ── */
+  .dist-section {
+    margin: 16px 20px 20px;
+    background: var(--navy-mid);
+    border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+  }
+  .dist-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .dist-header span { font-size: 12px; font-weight: 600; }
+  .dist-header small { font-size: 11px; color: var(--gray); }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    padding: 10px 16px; text-align: left;
+    font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+    text-transform: uppercase; color: rgba(255,255,255,0.3);
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 12px;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  tr.row-curr td { background: rgba(248,113,113,0.05); }
+  tr.row-fut  td { background: rgba(74,222,128,0.04); }
+  tr.row-tgt  td { background: rgba(227,24,55,0.05); }
+
+  /* ── FORMULA BOX ── */
+  .formula {
+    background: var(--navy-input);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px;
+    font-family: monospace; font-size: 11px;
+    color: rgba(255,255,255,0.6); line-height: 2;
+  }
+  .formula span { color: #f87171; }
+
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    .connector { flex-direction: row; height: 40px; }
+    .connector-line { flex: 1; height: 2px; width: auto; background: linear-gradient(90deg, transparent, rgba(227,24,55,0.4), transparent); }
+    .connector-pill { writing-mode: initial; }
+    .connector-value { writing-mode: initial; min-height: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-dot"></div>
+  <div>
+    <div class="logo-text">Sort Depth — Model Sandbox</div>
+    <div class="logo-sub">Interactive model · changes in either panel update everything in real time</div>
+  </div>
+  <div class="header-tag">Working Model</div>
+</header>
+
+<!-- SHARED INPUTS -->
+<div class="shared-bar">
+  <span class="shared-label">Shared →</span>
+
+  <div class="shared-input-group">
+    <label>Chutes</label>
+    <input type="range" id="s-chutes" min="5" max="30" value="14" step="1">
+    <div class="shared-val" id="sv-chutes">14</div>
+  </div>
+
+  <div class="shared-input-group">
+    <label>Drivers / chute</label>
+    <input type="range" id="s-dpc" min="15" max="60" value="32" step="1">
+    <div class="shared-val" id="sv-dpc">32</div>
+  </div>
+
+  <div class="shared-input-group">
+    <label>Sort shift hrs</label>
+    <input type="range" id="s-sorthrs" min="3" max="8" value="5" step="0.5">
+    <div class="shared-val" id="sv-sorthrs">5h</div>
+  </div>
+
+  <div class="shared-input-group">
+    <label>Pkgs / driver</label>
+    <input type="range" id="s-pkgs" min="100" max="250" value="170" step="5">
+    <div class="shared-val" id="sv-pkgs">170</div>
+  </div>
+
+  <div class="shared-input-group">
+    <label>Op. days / yr</label>
+    <input type="range" id="s-opdays" min="200" max="365" value="264" step="1">
+    <div class="shared-val" id="sv-opdays">264</div>
+  </div>
+
+  <div class="divider-v"></div>
+
+  <div style="font-size:11px;color:var(--gray);">
+    Total drivers: <strong id="sv-totaldrivers" style="color:white;">448</strong> &nbsp;|&nbsp;
+    Total pkgs/day: <strong id="sv-totalpkgs" style="color:white;">76,160</strong>
+  </div>
+</div>
+
+<!-- MAIN PANELS -->
+<div class="main">
+
+  <!-- LEFT: SORT WORKER MODEL -->
+  <div class="panel">
+    <div>
+      <div class="panel-title left">Sort Worker Model — First Principles</div>
+      <div class="panel-desc">Derives extra sort workers and cost from walking distance. Output feeds directly into the business case →</div>
+    </div>
+
+    <div class="formula">
+      T = <span>fixed_time</span> + (2 × distance / speed) &nbsp;&nbsp; pkgs/worker/hr = 3600 / T<br>
+      workers_needed = pkgs_per_chute / (sort_hrs × pkgs/worker/hr)
+    </div>
+
+    <div class="sec-div">Layout inputs</div>
+
+    <div class="sg">
+      <div class="sg-top">
+        <span class="sg-label">Current avg walk distance</span>
+        <div class="sg-val" id="lv-currdist">1.0m</div>
+      </div>
+      <input type="range" id="l-currdist" min="0.5" max="3" value="1.0" step="0.1">
+      <div class="sg-hint">Bull ring — distance from belt to cage (~1m today)</div>
+    </div>
+
+    <div class="sg">
+      <div class="sg-top">
+        <span class="sg-label">Future avg walk distance</span>
+        <div class="sg-val" id="lv-futdist">2.0m</div>
+      </div>
+      <input type="range" id="l-futdist" min="0.5" max="5" value="2.0" step="0.1">
+      <div class="sg-hint">New grid layout — infrastructure design target</div>
+    </div>
+
+    <div class="sec-div">Worker inputs</div>
+
+    <div class="sg">
+      <div class="sg-top">
+        <span class="sg-label">Sort worker rate (all-in $/hr)</span>
+        <div class="sg-val" id="lv-rate">$32</div>
+      </div>
+      <input type="range" id="l-rate" min="25" max="45" value="32" step="0.5">
+      <div class="sg-hint">Includes night shift loading — base $27 + 17.5% = $31.73</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="sg">
+        <div class="sg-top">
+          <span class="sg-label">Fixed time / pkg</span>
+          <div class="sg-val" id="lv-fixed">4s</div>
+        </div>
+        <input type="range" id="l-fixed" min="2" max="8" value="4" step="0.5">
+        <div class="sg-hint">Pick + scan + place</div>
+      </div>
+      <div class="sg">
+        <div class="sg-top">
+          <span class="sg-label">Walk speed</span>
+          <div class="sg-val" id="lv-speed">1.0 m/s</div>
+        </div>
+        <input type="range" id="l-speed" min="0.6" max="1.4" value="1.0" step="0.1">
+        <div class="sg-hint">Warehouse pace</div>
+      </div>
+    </div>
+
+    <div class="sg">
+      <div class="sg-top">
+        <span class="sg-label">Sections per driver</span>
+        <div class="sg-val" id="lv-sections">6</div>
+      </div>
+      <input type="range" id="l-sections" min="3" max="12" value="6" step="1">
+      <div class="sg-hint">Sort destinations per driver in the grid layout</div>
+    </div>
+
+    <div class="sec-div">Sort worker results</div>
+
+    <div class="rg">
+      <div class="rc">
+        <div class="rc-lbl">Current time / pkg</div>
+        <div class="rc-val" id="lr-currT">6.0s</div>
+        <div class="rc-sub" id="lr-currPkgHr">600 pkgs/worker/hr</div>
+      </div>
+      <div class="rc">
+        <div class="rc-lbl">Current workers needed</div>
+        <div class="rc-val" id="lr-currW">1.81 → 2</div>
+        <div class="rc-sub" id="lr-pkgschute">5,440 pkgs / chute</div>
+      </div>
+      <div class="rc">
+        <div class="rc-lbl">Future time / pkg</div>
+        <div class="rc-val" id="lr-futT">10.0s</div>
+        <div class="rc-sub" id="lr-futPkgHr">360 pkgs/worker/hr</div>
+      </div>
+      <div class="rc">
+        <div class="rc-lbl">Future workers needed</div>
+        <div class="rc-val" id="lr-futW">3.02 → 3</div>
+        <div class="rc-sub" id="lr-bins">192 sort bins / chute</div>
+      </div>
+    </div>
+
+    <div class="rg">
+      <div class="rc orange">
+        <div class="rc-lbl">Extra workers / chute</div>
+        <div class="rc-val" id="lr-extraPerChute">+1</div>
+        <div class="rc-sub" id="lr-extraTotal">+14 workers total</div>
+      </div>
+      <div class="rc orange">
+        <div class="rc-lbl">Overhead vs current</div>
+        <div class="rc-val" id="lr-overhead">+50%</div>
+        <div class="rc-sub">sort labour increase</div>
+      </div>
+    </div>
+
+    <!-- DESIGN TARGET -->
+    <div class="target-box" id="l-targetbox" style="background:var(--orange-dim);border:1px solid var(--orange-border);">
+      <div class="target-big" id="lr-target" style="color:var(--orange);">1.3m</div>
+      <div>
+        <div class="target-lbl">Max walk distance — no extra workers</div>
+        <div class="target-status" id="lr-targetstatus">Set future distance ≤ this to hold worker count</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONNECTOR -->
+  <div class="connector">
+    <div class="connector-line"></div>
+    <div class="connector-pill">Sort cost</div>
+    <div class="connector-arrow">▶</div>
+    <div class="connector-value" id="conn-value">$888/day</div>
+    <div class="connector-arrow">▶</div>
+    <div class="connector-line"></div>
+  </div>
+
+  <!-- RIGHT: BUSINESS CASE -->
+  <div class="panel">
+    <div>
+      <div class="panel-title right">Business Case Model</div>
+      <div class="panel-desc">Sort cost is driven by the model on the left — no assumptions, derived from first principles.</div>
+    </div>
+
+    <!-- LINKED BADGE -->
+    <div class="linked-badge">
+      <span class="lbl-text">Sort investment / day</span>
+      <span class="link-arrow">←</span>
+      <span class="lbv" id="bc-sortcost">$888</span>
+      <span class="lbl-text">/day linked from sort model</span>
+    </div>
+
+    <div class="sec-div">Driver inputs</div>
+
+    <div class="sg">
+      <div class="sg-top">
+        <span class="sg-label">Target load time</span>
+        <div class="sg-val" id="rv-loadtime">30 min</div>
+      </div>
+      <input type="range" id="r-loadtime" min="15" max="90" value="30" step="5">
+      <div class="sg-hint">Current avg 90 min → target after section sort</div>
+    </div>
+
+    <div class="sg">
+      <div class="sg-top">
+        <span class="sg-label">Current delivery rate</span>
+        <div class="sg-val" id="rv-delrate">34 p/h</div>
+      </div>
+      <input type="range" id="r-delrate" min="20" max="60" value="34" step="1">
+      <div class="sg-hint">Packages per hour on road (170 pkgs ÷ 5 hrs)</div>
+    </div>
+
+    <div class="sec-div">Current rate structure</div>
+
+    <div class="sg">
+      <div class="sg-top">
+        <span class="sg-label">Current package rate</span>
+        <div class="sg-val" id="rv-cbase">$2.90</div>
+      </div>
+      <input type="range" id="r-cbase" min="150" max="450" value="290" step="1">
+      <div class="sg-hint">Flat rate per package — no performance or multi-drop adjustments</div>
+    </div>
+
+    <div class="sec-div">Future rate structure</div>
+
+    <div class="sg">
+      <div class="sg-top">
+        <span class="sg-label">Base rate</span>
+        <div class="sg-val" id="rv-fbase">$2.60</div>
+      </div>
+      <input type="range" id="r-fbase" min="150" max="450" value="260" step="1">
+      <div class="sg-hint">Negotiated floor rate in future model</div>
+    </div>
+
+    <div class="sg">
+      <div class="sg-top">
+        <span class="sg-label">Performance multiplier</span>
+        <div class="sg-val" id="rv-fperf">5%</div>
+      </div>
+      <input type="range" id="r-fperf" min="3" max="20" value="5" step="1">
+      <div class="sg-hint">Uplift on base rate for delivery performance</div>
+    </div>
+
+    <div class="sg">
+      <div class="sg-top">
+        <span class="sg-label">Multi-drop share</span>
+        <div class="sg-val" id="rv-fmdpct">25%</div>
+      </div>
+      <input type="range" id="r-fmdpct" min="0" max="60" value="25" step="1">
+      <div class="sg-hint">% of packages delivered as multi-drop</div>
+    </div>
+
+    <div class="sg">
+      <div class="sg-top">
+        <span class="sg-label">Multi-drop discount</span>
+        <div class="sg-val" id="rv-fmddis">15%</div>
+      </div>
+      <input type="range" id="r-fmddis" min="0" max="50" value="15" step="1">
+      <div class="sg-hint">Rate reduction applied to multi-drop packages</div>
+    </div>
+
+    <div class="blended-rate-badge future" id="fut-blended-badge">
+      <span class="br-label">Future blended rate</span>
+      <span class="br-formula" id="fut-formula">$2.60 × 1.05 × (1 − 25%×15%)</span>
+      <span class="br-val" id="rv-futblended">$2.63/pkg</span>
+    </div>
+
+    <div class="sec-div">Business case results</div>
+
+    <div class="rg">
+      <div class="rc">
+        <div class="rc-lbl">Time freed / driver</div>
+        <div class="rc-val" id="rr-timefree">1.0 hr</div>
+        <div class="rc-sub">extra road time per day</div>
+      </div>
+      <div class="rc">
+        <div class="rc-lbl">Extra pkgs / driver</div>
+        <div class="rc-val" id="rr-extrapkgs">34</div>
+        <div class="rc-sub" id="rr-extrapkgsyr">4.0M extra / year</div>
+      </div>
+      <div class="rc green">
+        <div class="rc-lbl">DP earn / van / day</div>
+        <div class="rc-val" id="rr-dpearnings">$530</div>
+        <div class="rc-sub" id="rr-dpgain">+$37 (+7.6%) vs today</div>
+      </div>
+      <div class="rc blue">
+        <div class="rc-lbl">DP break-even rate</div>
+        <div class="rc-val" id="rr-breakeven">$2.42</div>
+        <div class="rc-sub">floor for win-win zone</div>
+      </div>
+    </div>
+
+    <div class="rg">
+      <div class="rc orange">
+        <div class="rc-lbl">Sort investment / day</div>
+        <div class="rc-val" id="rr-sortcost">$888</div>
+        <div class="rc-sub">from sort worker model ←</div>
+      </div>
+      <div class="rc green">
+        <div class="rc-lbl">Rate saving / day</div>
+        <div class="rc-val" id="rr-ratesave">$10,710</div>
+        <div class="rc-sub">same vol at new rate</div>
+      </div>
+    </div>
+
+    <div class="rc green" style="margin-top:0;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div class="rc-lbl">Net network saving</div>
+          <div class="rc-val" id="rr-netsaveyear">$2.59M / year</div>
+          <div class="rc-sub" id="rr-netsaveday">$9,822 / day</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="rc-lbl">DP earnings uplift / year</div>
+          <div class="rc-val" id="rr-dpyear" style="color:white;">$4.41M</div>
+          <div class="rc-sub">across all vans</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DISTANCE LOOKUP TABLE -->
+<div class="dist-section">
+  <div class="dist-header">
+    <span>Walking Distance → Workers Needed</span>
+    <small>Highlighted: <span style="color:#f87171;">■</span> current &nbsp; <span style="color:#4ade80;">■</span> future &nbsp; <span style="color:#ff6b85;">■</span> design target</small>
+    <small style="margin-left:auto;">Updates with all sliders</small>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Avg Walk</th>
+        <th>Time / pkg</th>
+        <th>Pkgs / worker / hr</th>
+        <th>Workers (raw → rounded)</th>
+        <th>Extra workers / chute</th>
+        <th>Total extra workers</th>
+        <th>Extra sort cost / day</th>
+        <th>Extra sort cost / year</th>
+      </tr>
+    </thead>
+    <tbody id="dist-tbody"></tbody>
+  </table>
+</div>
+
+<script src="sandbox.js"></script>
+</body>
+</html>
